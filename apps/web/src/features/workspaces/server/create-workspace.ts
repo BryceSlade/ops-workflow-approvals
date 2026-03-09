@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireCurrentUser } from "@/lib/auth-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { revalidatePath } from "next/cache";
 import { WorkspaceRole } from "@prisma/client";
 
