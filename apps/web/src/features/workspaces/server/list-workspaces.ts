@@ -1,6 +1,6 @@
 import { WorkspaceRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireCurrentUser } from "@/lib/auth-user";
+import { requireCurrentUser } from "@/lib/current-user";
 
 export type WorkspaceListItem = {
   id: string;
