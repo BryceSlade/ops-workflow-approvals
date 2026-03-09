@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: owa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: owa
+      POSTGRES_PASSWORD: owa_password
+      POSTGRES_DB: owa_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - owa_pgdata:/var/lib/postgresql/data
+
+volumes:
+  owa_pgdata:
