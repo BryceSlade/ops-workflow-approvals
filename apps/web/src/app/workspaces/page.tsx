@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { createWorkspace } from "@/features/workspaces/server/create-workspace";
@@ -65,11 +66,17 @@ export default async function WorkspacesPage() {
                     <p className="text-sm text-muted-foreground">
                       Role: {workspace.members[0]?.role ?? "Unknown"}
                     </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {workspace.id}
+                    </p>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">
-                    {workspace.id}
-                  </p>
+                  <Link
+                    href={`/workspaces/${workspace.id}/settings/members`}
+                    className="rounded-md border px-4 py-2 text-sm font-medium"
+                  >
+                    Manage members
+                  </Link>
                 </div>
               ))}
             </div>
