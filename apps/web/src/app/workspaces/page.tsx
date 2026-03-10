@@ -66,17 +66,26 @@ export default async function WorkspacesPage() {
                     <p className="text-sm text-muted-foreground">
                       Role: {workspace.members[0]?.role ?? "Unknown"}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {workspace.id}
                     </p>
                   </div>
 
-                  <Link
-                    href={`/workspaces/${workspace.id}/settings/members`}
-                    className="rounded-md border px-4 py-2 text-sm font-medium"
-                  >
-                    Manage members
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/workspaces/${workspace.id}/requests`}
+                      className="rounded-md border px-4 py-2 text-sm font-medium"
+                    >
+                      Create/View Requests
+                    </Link>
+
+                    <Link
+                      href={`/workspaces/${workspace.id}/settings/members`}
+                      className="rounded-md border px-4 py-2 text-sm font-medium"
+                    >
+                      Manage members
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

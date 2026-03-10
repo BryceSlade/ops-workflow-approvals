@@ -14,6 +14,13 @@ enum WorkspaceRole {
   REQUESTER
 }
 
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -21,8 +28,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships WorkspaceMember[]
-  auditEvents AuditEvent[]      @relation("AuditActor")
+  memberships     WorkspaceMember[]
+  auditEvents     AuditEvent[]      @relation("AuditActor")
+  createdRequests WorkflowRequest[] @relation("RequestCreatedBy")
 
   @@index([email])
 }
@@ -33,8 +41,9 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members    WorkspaceMember[]
+  members     WorkspaceMember[]
   auditEvents AuditEvent[]
+  requests    WorkflowRequest[]
 }
 
 model WorkspaceMember {
@@ -54,19 +63,15 @@ model WorkspaceMember {
 }
 
 model AuditEvent {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   actorUserId String?
 
-  // e.g. "workspace.created", "member.invited", "request.approved"
-  action      String
-  // Human-friendly summary for quick UI rendering (optional but handy)
-  message     String?
+  action   String
+  message  String?
+  metadata Json?
 
-  // JSON payload for structured details (diffs, ids, etc.)
-  metadata    Json?
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   actor     User?     @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
@@ -74,4 +79,22 @@ model AuditEvent {
   @@index([workspaceId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([action])
+}
+
+model WorkflowRequest {
+  id              String        @id @default(cuid())
+  workspaceId     String
+  createdByUserId String
+  title           String
+  description     String?
+  status          RequestStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("RequestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, createdAt])
+  @@index([createdByUserId, createdAt])
 }
