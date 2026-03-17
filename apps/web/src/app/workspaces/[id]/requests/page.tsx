@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { RequestStatus } from "@prisma/client";
-import { submitRequest } from "@/features/requests/server/submit-request";
-import { approveRequest } from "@/features/requests/server/approve-request";
-import { rejectRequest } from "@/features/requests/server/reject-request";
+import { SubmitRequestForm } from "@/features/requests/components/submit-request-form";
+import { ReviewRequestActions } from "@/features/requests/components/review-request-actions";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { createRequestDraft } from "@/features/requests/server/create-request-draft";
@@ -35,7 +34,14 @@ export default async function WorkspaceRequestsPage({
   }
 
   const { id: workspaceId } = await params;
-  const membership = await requireRequestWorkspaceMember(workspaceId);
+
+  let membership;
+  try {
+    membership = await requireRequestWorkspaceMember(workspaceId);
+  } catch {
+    redirect("/forbidden");
+  }
+
   const canReview = isRequestReviewerRole(membership.role);
 
   const reviewerRequests = canReview
@@ -137,38 +143,11 @@ export default async function WorkspaceRequestsPage({
                       <div className="flex gap-2">
                         {request.status === RequestStatus.DRAFT &&
                         request.createdByUserId === session.user.id ? (
-                          <form action={submitRequest.bind(null, request.id)}>
-                            <button
-                              type="submit"
-                              className="rounded-md border px-4 py-2 text-sm font-medium"
-                            >
-                              Submit
-                            </button>
-                          </form>
+                          <SubmitRequestForm requestId={request.id} />
                         ) : null}
 
                         {request.status === RequestStatus.SUBMITTED ? (
-                          <>
-                            <form
-                              action={approveRequest.bind(null, request.id)}
-                            >
-                              <button
-                                type="submit"
-                                className="rounded-md border px-4 py-2 text-sm font-medium"
-                              >
-                                Approve
-                              </button>
-                            </form>
-
-                            <form action={rejectRequest.bind(null, request.id)}>
-                              <button
-                                type="submit"
-                                className="rounded-md border px-4 py-2 text-sm font-medium"
-                              >
-                                Reject
-                              </button>
-                            </form>
-                          </>
+                          <ReviewRequestActions requestId={request.id} />
                         ) : null}
                       </div>
                     </div>
@@ -205,14 +184,7 @@ export default async function WorkspaceRequestsPage({
                       Request ID: {request.id}
                     </p>
                     {request.status === RequestStatus.DRAFT ? (
-                      <form action={submitRequest.bind(null, request.id)}>
-                        <button
-                          type="submit"
-                          className="rounded-md border px-4 py-2 text-sm font-medium"
-                        >
-                          Submit
-                        </button>
-                      </form>
+                      <SubmitRequestForm requestId={request.id} />
                     ) : null}
                   </div>
                 </div>

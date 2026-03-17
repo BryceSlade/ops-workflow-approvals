@@ -53,3 +53,7 @@ export async function requireWorkspaceAdmin(
 
   return membership;
 }
+
+export function isWorkspaceAdminRole(role: WorkspaceRole): boolean {
+  return role === WorkspaceRole.ADMIN;
+}

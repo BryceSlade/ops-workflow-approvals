@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { WorkspaceRole } from "@prisma/client";
-import { addWorkspaceMember } from "@/features/workspaces/server/add-workspace-member";
-import { changeWorkspaceMemberRole } from "@/features/workspaces/server/change-workspace-member-role";
+import {
+  requireWorkspaceMember,
+  isWorkspaceAdminRole,
+} from "@/features/workspaces/server/permissions";
 import {
   listWorkspaceMembers,
   type WorkspaceMemberListItem,
 } from "@/features/workspaces/server/list-workspace-members";
+import { AddMemberForm } from "@/features/workspaces/components/add-member-form";
+import { ChangeRoleForm } from "@/features/workspaces/components/change-role-form";
 
 type MembersPageProps = {
   params: Promise<{
@@ -24,6 +27,12 @@ export default async function WorkspaceMembersPage({
   }
 
   const { id: workspaceId } = await params;
+  const membership = await requireWorkspaceMember(workspaceId);
+
+  if (!isWorkspaceAdminRole(membership.role)) {
+    redirect("/forbidden");
+  }
+
   const members = await listWorkspaceMembers(workspaceId);
 
   return (
@@ -41,38 +50,7 @@ export default async function WorkspaceMembersPage({
 
         <section className="rounded-lg border p-4">
           <h2 className="text-lg font-medium">Add member</h2>
-
-          <form
-            action={addWorkspaceMember.bind(null, workspaceId)}
-            className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]"
-          >
-            <input
-              type="email"
-              name="email"
-              placeholder="user@example.com"
-              className="rounded-md border px-3 py-2 text-sm"
-              required
-            />
-
-            <select
-              name="role"
-              className="rounded-md border px-3 py-2 text-sm"
-              defaultValue={WorkspaceRole.REQUESTER}
-            >
-              {Object.values(WorkspaceRole).map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="submit"
-              className="rounded-md border px-4 py-2 text-sm font-medium"
-            >
-              Add member
-            </button>
-          </form>
+          <AddMemberForm workspaceId={workspaceId} />
         </section>
 
         <section className="rounded-lg border p-4">
@@ -95,34 +73,11 @@ export default async function WorkspaceMembersPage({
                         {member.user.email}
                       </p>
                     </div>
-
-                    <form
-                      action={changeWorkspaceMemberRole.bind(
-                        null,
-                        workspaceId,
-                        member.id,
-                      )}
-                      className="flex gap-3"
-                    >
-                      <select
-                        name="role"
-                        defaultValue={member.role}
-                        className="rounded-md border px-3 py-2 text-sm"
-                      >
-                        {Object.values(WorkspaceRole).map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
-                        ))}
-                      </select>
-
-                      <button
-                        type="submit"
-                        className="rounded-md border px-4 py-2 text-sm font-medium"
-                      >
-                        Update role
-                      </button>
-                    </form>
+                    <ChangeRoleForm
+                      workspaceId={workspaceId}
+                      memberId={member.id}
+                      currentRole={member.role}
+                    />
                   </div>
 
                   <p className="mt-2 text-xs text-muted-foreground">
