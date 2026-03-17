@@ -7,10 +7,9 @@ import {
   isRequestReviewerRole,
   requireRequestWorkspaceMember,
 } from "@/features/requests/server/permissions";
-import { updateRequestDraft } from "@/features/requests/server/update-request-draft";
-import { submitRequest } from "@/features/requests/server/submit-request";
-import { approveRequest } from "@/features/requests/server/approve-request";
-import { rejectRequest } from "@/features/requests/server/reject-request";
+import { UpdateRequestDraftForm } from "@/features/requests/components/update-request-draft-form";
+import { SubmitRequestForm } from "@/features/requests/components/submit-request-form";
+import { ReviewRequestActions } from "@/features/requests/components/review-request-actions";
 
 type RequestDetailPageProps = {
   params: Promise<{
@@ -29,10 +28,18 @@ export default async function RequestDetailPage({
   }
 
   const { id: workspaceId, requestId } = await params;
-  const membership = await requireRequestWorkspaceMember(workspaceId);
-  const request = await getWorkspaceRequest(workspaceId, requestId);
 
+  const membership = await (async () => {
+    try {
+      return await requireRequestWorkspaceMember(workspaceId);
+    } catch {
+      redirect("/forbidden");
+    }
+  })();
+
+  const request = await getWorkspaceRequest(workspaceId, requestId);
   const canReview = isRequestReviewerRole(membership.role);
+
   const isDraftOwner =
     request.status === RequestStatus.DRAFT &&
     request.createdByUserId === session.user.id;
@@ -89,44 +96,17 @@ export default async function RequestDetailPage({
           <section className="rounded-lg border p-4">
             <h2 className="text-lg font-medium">Edit draft</h2>
 
-            <form
-              action={updateRequestDraft.bind(null, request.id)}
-              className="mt-4 space-y-3"
-            >
-              <input
-                type="text"
-                name="title"
-                defaultValue={request.title}
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                required
-                maxLength={200}
-              />
-
-              <textarea
-                name="description"
-                defaultValue={request.description ?? ""}
-                className="min-h-35 w-full rounded-md border px-3 py-2 text-sm"
-              />
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="rounded-md border px-4 py-2 text-sm font-medium"
-                >
-                  Save changes
-                </button>
-              </div>
-            </form>
+            <UpdateRequestDraftForm
+              requestId={request.id}
+              title={request.title}
+              description={request.description}
+            />
 
             <div className="mt-4">
-              <form action={submitRequest.bind(null, request.id)}>
-                <button
-                  type="submit"
-                  className="rounded-md border px-4 py-2 text-sm font-medium"
-                >
-                  Submit request
-                </button>
-              </form>
+              <SubmitRequestForm
+                requestId={request.id}
+                buttonLabel="Submit request"
+              />
             </div>
           </section>
         ) : null}
@@ -134,25 +114,8 @@ export default async function RequestDetailPage({
         {canReview && request.status === RequestStatus.SUBMITTED ? (
           <section className="rounded-lg border p-4">
             <h2 className="text-lg font-medium">Review decision</h2>
-
-            <div className="mt-4 flex gap-2">
-              <form action={approveRequest.bind(null, request.id)}>
-                <button
-                  type="submit"
-                  className="rounded-md border px-4 py-2 text-sm font-medium"
-                >
-                  Approve
-                </button>
-              </form>
-
-              <form action={rejectRequest.bind(null, request.id)}>
-                <button
-                  type="submit"
-                  className="rounded-md border px-4 py-2 text-sm font-medium"
-                >
-                  Reject
-                </button>
-              </form>
+            <div className="mt-4">
+              <ReviewRequestActions requestId={request.id} />
             </div>
           </section>
         ) : null}
