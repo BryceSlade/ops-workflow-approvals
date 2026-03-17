@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { RequestStatus } from "@prisma/client";
 import { submitRequest } from "@/features/requests/server/submit-request";
 import { approveRequest } from "@/features/requests/server/approve-request";
@@ -108,7 +109,12 @@ export default async function WorkspaceRequestsPage({
                   <div key={request.id} className="rounded-md border p-3">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="font-medium">{request.title}</p>
+                        <Link
+                          href={`/workspaces/${workspaceId}/requests/${request.id}`}
+                          className="font-medium underline-offset-4 hover:underline"
+                        >
+                          {request.title}
+                        </Link>
                         <p className="text-sm text-muted-foreground">
                           {request.createdBy.name ?? request.createdBy.email}
                         </p>
@@ -179,7 +185,12 @@ export default async function WorkspaceRequestsPage({
               {myRequests.map((request: MyWorkspaceRequestListItem) => (
                 <div key={request.id} className="rounded-md border p-3">
                   <div className="flex items-start justify-between gap-4">
-                    <p className="font-medium">{request.title}</p>
+                    <Link
+                      href={`/workspaces/${workspaceId}/requests/${request.id}`}
+                      className="font-medium underline-offset-4 hover:underline"
+                    >
+                      {request.title}
+                    </Link>
                     <p className="text-sm font-medium">{request.status}</p>
                   </div>
 
